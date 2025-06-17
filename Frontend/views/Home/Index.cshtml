@@ -1,0 +1,150 @@
+@{
+    ViewData["Title"] = "MiniPhotoshop";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Tải lên ảnh</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <input type="file" id="imageUpload" class="form-control" accept="image/*" />
+                    </div>
+                    <button id="uploadBtn" class="btn btn-primary w-100">Tải lên</button>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5>Bộ lọc</h5>
+                </div>
+                <div class="card-body">
+                    <div id="filterList" class="list-group">
+                        <!-- Danh sách bộ lọc sẽ được thêm vào đây -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3" id="filterParamsCard" style="display: none;">
+                <div class="card-header">
+                    <h5 id="selectedFilterName">Tham số bộ lọc</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Brightness Filter -->
+                    <div id="brightnessParams" class="filter-params" style="display: none;">
+                        <label for="brightnessSlider" class="form-label">Độ sáng: <span id="brightnessValue">0</span></label>
+                        <input type="range" class="form-range" id="brightnessSlider" min="-1" max="1" step="0.1" value="0">
+                        <button class="btn btn-primary mt-2 apply-filter" data-filter="Brightness">Áp dụng</button>
+                    </div>
+
+                    <!-- Contrast Filter -->
+                    <div id="contrastParams" class="filter-params" style="display: none;">
+                        <label for="contrastSlider" class="form-label">Độ tương phản: <span id="contrastValue">0</span></label>
+                        <input type="range" class="form-range" id="contrastSlider" min="-1" max="1" step="0.1" value="0">
+                        <button class="btn btn-primary mt-2 apply-filter" data-filter="Contrast">Áp dụng</button>
+                    </div>
+
+                    <!-- Resize Filter -->
+                    <div id="resizeParams" class="filter-params" style="display: none;">
+                        <div class="mb-3">
+                            <label for="widthInput" class="form-label">Chiều rộng (px)</label>
+                            <input type="number" class="form-control" id="widthInput" min="1" max="5000">
+                        </div>
+                        <div class="mb-3">
+                            <label for="heightInput" class="form-label">Chiều cao (px)</label>
+                            <input type="number" class="form-control" id="heightInput" min="1" max="5000">
+                        </div>
+                        <button class="btn btn-primary apply-filter" data-filter="Resize">Áp dụng</button>
+                    </div>
+
+                    <!-- Rotate Filter -->
+                    <div id="rotateParams" class="filter-params" style="display: none;">
+                        <div class="mb-3">
+                            <label for="angleInput" class="form-label">Góc xoay (độ)</label>
+                            <input type="number" class="form-control" id="angleInput" value="90">
+                        </div>
+                        <div class="btn-group w-100 mb-3">
+                            <button class="btn btn-outline-primary" data-angle="-90">-90°</button>
+                            <button class="btn btn-outline-primary" data-angle="90">90°</button>
+                            <button class="btn btn-outline-primary" data-angle="180">180°</button>
+                        </div>
+                        <button class="btn btn-primary apply-filter" data-filter="Rotate">Áp dụng</button>
+                    </div>
+
+                    <!-- Crop Filter -->
+                    <div id="cropParams" class="filter-params" style="display: none;">
+                        <div class="mb-3">
+                            <label for="cropXInput" class="form-label">X (px)</label>
+                            <input type="number" class="form-control" id="cropXInput" min="0">
+                        </div>
+                        <div class="mb-3">
+                            <label for="cropYInput" class="form-label">Y (px)</label>
+                            <input type="number" class="form-control" id="cropYInput" min="0">
+                        </div>
+                        <div class="mb-3">
+                            <label for="cropWidthInput" class="form-label">Chiều rộng (px)</label>
+                            <input type="number" class="form-control" id="cropWidthInput" min="1">
+                        </div>
+                        <div class="mb-3">
+                            <label for="cropHeightInput" class="form-label">Chiều cao (px)</label>
+                            <input type="number" class="form-control" id="cropHeightInput" min="1">
+                        </div>
+                        <button class="btn btn-primary apply-filter" data-filter="Crop">Áp dụng</button>
+                    </div>
+
+                    <!-- Grayscale Filter -->
+                    <div id="grayscaleParams" class="filter-params" style="display: none;">
+                        <p>Chuyển đổi ảnh sang thang độ xám.</p>
+                        <button class="btn btn-primary apply-filter" data-filter="Grayscale">Áp dụng</button>
+                    </div>
+
+                    <!-- Sepia Filter -->
+                    <div id="sepiaParams" class="filter-params" style="display: none;">
+                        <p>Áp dụng hiệu ứng màu sepia (nâu cổ điển).</p>
+                        <button class="btn btn-primary apply-filter" data-filter="Sepia">Áp dụng</button>
+                    </div>
+
+                    <!-- Flip Horizontal Filter -->
+                    <div id="flipHorizontalParams" class="filter-params" style="display: none;">
+                        <p>Lật ảnh theo chiều ngang.</p>
+                        <button class="btn btn-primary apply-filter" data-filter="Flip Horizontal">Áp dụng</button>
+                    </div>
+
+                    <!-- Flip Vertical Filter -->
+                    <div id="flipVerticalParams" class="filter-params" style="display: none;">
+                        <p>Lật ảnh theo chiều dọc.</p>
+                        <button class="btn btn-primary apply-filter" data-filter="Flip Vertical">Áp dụng</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>Xem trước</h5>
+                    <div>
+                        <button id="downloadBtn" class="btn btn-success" disabled>Tải xuống</button>
+                        <button id="resetBtn" class="btn btn-secondary" disabled>Đặt lại</button>
+                    </div>
+                </div>
+                <div class="card-body text-center">
+                    <div id="imagePreview">
+                        <div class="placeholder-text">
+                            <i class="bi bi-image" style="font-size: 4rem;"></i>
+                            <p>Tải lên ảnh để bắt đầu chỉnh sửa</p>
+                        </div>
+                        <img id="previewImage" style="max-width: 100%; max-height: 70vh; display: none;" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/app.js"></script>
+} 

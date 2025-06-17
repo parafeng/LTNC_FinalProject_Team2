@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: miniphotoshop
+    runtime: docker
+    plan: free
+    envVars:
+      - key: IMAGE_API_KEY
+        sync: false
+      - key: IMGBB_API_KEY
+        sync: false
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production 

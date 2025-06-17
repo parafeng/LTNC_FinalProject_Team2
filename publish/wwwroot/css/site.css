@@ -1,0 +1,211 @@
+/* CSS chung cho ứng dụng MiniPhotoshop */
+
+html {
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+body {
+    margin-bottom: 60px;
+    background-color: #f8f9fa;
+}
+
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    white-space: nowrap;
+    line-height: 60px;
+    background-color: #343a40;
+    color: #fff;
+}
+
+/* CSS cho phần xử lý ảnh */
+#preview-image {
+    max-height: 500px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px;
+    transition: all 0.3s ease;
+}
+
+#preview-image:hover {
+    transform: scale(1.01);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.filter-button {
+    transition: all 0.2s ease;
+}
+
+.filter-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Styling cho range input */
+.form-range::-webkit-slider-thumb {
+    background: #0d6efd;
+}
+
+.form-range::-moz-range-thumb {
+    background: #0d6efd;
+}
+
+.form-range::-ms-thumb {
+    background: #0d6efd;
+}
+
+/* Loading indicator */
+#loading-indicator {
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* History list */
+#history-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.history-button {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.5rem;
+}
+
+/* Notification alerts */
+#error-container, #success-container {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Custom styles */
+.placeholder-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    min-height: 300px;
+}
+
+.card {
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 0.75rem 1rem;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+}
+
+.accordion-button:focus {
+    box-shadow: none;
+    border-color: rgba(13, 110, 253, 0.25);
+}
+
+.list-group-item {
+    border-left: none;
+    border-right: none;
+    padding: 0.75rem 1rem;
+}
+
+.list-group-item:first-child {
+    border-top: none;
+}
+
+.list-group-item:last-child {
+    border-bottom: none;
+}
+
+.btn-outline-primary {
+    border-color: #0d6efd;
+    color: #0d6efd;
+}
+
+.btn-outline-primary:hover {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.shadow-sm {
+    box-shadow: 0 .125rem .25rem rgba(0,0,0,.075)!important;
+}
+
+.shadow {
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+}
+
+/* Thêm CSS cho phần xem trước hình ảnh */
+.sticky-top {
+    position: sticky;
+    transition: all 0.3s ease;
+}
+
+.card-body {
+    transition: max-height 0.3s ease;
+}
+
+#imagePreview {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+}
+
+#imagePreview img {
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Hiệu ứng khi đang tải ảnh */
+#imagePreview.loading img {
+    opacity: 0.5;
+}
+
+/* Đảm bảo các thanh điều chỉnh hiển thị tốt trên thiết bị nhỏ */
+@media (max-width: 768px) {
+    .sticky-top {
+        position: relative;
+        margin-bottom: 1rem;
+    }
+    
+    .d-flex.align-items-center {
+        flex-wrap: wrap;
+    }
+    
+    .range-value {
+        margin-top: 0.25rem;
+    }
+}
+
+/* Tối ưu hiển thị cho thiết bị di động */
+@media (max-width: 576px) {
+    .form-range {
+        width: 100%;
+        margin-right: 0 !important;
+        margin-bottom: 0.5rem;
+    }
+    
+    .range-value {
+        display: block;
+        width: 100%;
+        text-align: center;
+    }
+} 

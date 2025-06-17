@@ -1,0 +1,37 @@
+# .NET Core
+bin/
+obj/
+out/
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.dbmdl
+*.jfm
+
+# IDE files
+.vscode/
+.idea/
+
+# Node.js
+node_modules/
+
+# User uploads
+wwwroot/uploads/*
+!wwwroot/uploads/.gitkeep
+
+# Environment variables
+.env
+.env.local
+
+# Cache files
+*.cache
+*.dll
+*.exe
+*.pdb
+*.userprefs
+*.log
+*.swp
+*.swo 

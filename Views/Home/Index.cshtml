@@ -1,0 +1,680 @@
+@{
+    ViewData["Title"] = "MiniPhotoshop";
+    var filters = ViewBag.Filters as IEnumerable<MiniPhotoshop.Backend.Services.FilterInfo> ?? new List<MiniPhotoshop.Backend.Services.FilterInfo>();
+}
+
+<div class="container-fluid mt-4">
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-upload"></i> Tải lên ảnh</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" action="/api/image/upload">
+                        <div class="mb-3">
+                            <input type="file" id="imageUpload" name="file" class="form-control" accept="image/*" />
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-cloud-arrow-up"></i> Tải lên</button>
+                    </form>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(ViewBag.CurrentImagePath))
+            {
+                <div class="card mt-3 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-layers"></i> Bộ lọc đã áp dụng</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush" id="appliedFiltersList">
+                            <!-- Danh sách bộ lọc đã áp dụng sẽ được hiển thị ở đây -->
+                            <div class="list-group-item text-center">
+                                <span class="text-muted">Đang tải...</span>
+                            </div>
+                        </div>
+                        <div class="p-2">
+                            <form method="post" action="/api/image/reset">
+                                <input type="hidden" name="imagePath" value="@ViewBag.CurrentImagePath" />
+                                <button type="submit" class="btn btn-warning w-100">
+                                    <i class="bi bi-arrow-counterclockwise"></i> Đặt lại về ảnh gốc
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="card mt-3 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-sliders"></i> Bộ lọc</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="accordion" id="filterAccordion">
+                        <!-- Nhóm bộ lọc cơ bản -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#basicFilters">
+                                    <i class="bi bi-palette me-2"></i> Bộ lọc cơ bản
+                                </button>
+                            </h2>
+                            <div id="basicFilters" class="accordion-collapse collapse show">
+                                <div class="accordion-body p-0">
+                                    <div class="list-group list-group-flush">
+                                        @foreach (var filter in filters.Where(f => 
+                                            f.Name == "Grayscale" || 
+                                            f.Name == "Sepia" || 
+                                            f.Name == "Invert"))
+                                        {
+                                            <div class="list-group-item">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        @if (filter.Name == "Grayscale")
+                                                        {
+                                                            <i class="bi bi-circle-half me-2"></i>
+                                                        }
+                                                        else if (filter.Name == "Sepia")
+                                                        {
+                                                            <i class="bi bi-camera-fill me-2"></i>
+                                                        }
+                                                        else if (filter.Name == "Invert")
+                                                        {
+                                                            <i class="bi bi-symmetry-vertical me-2"></i>
+                                                        }
+                                                        @filter.Name
+                                                    </div>
+                                                    <form method="post" action="/api/image/apply" class="d-inline">
+                                                        <input type="hidden" name="imagePath" value="@ViewBag.CurrentImagePath" />
+                                                        <input type="hidden" name="filterName" value="@filter.Name" />
+                                                        <button type="submit" class="btn btn-sm btn-outline-primary">Áp dụng</button>
+                                                    </form>
+                                                </div>
+                                                <small class="text-muted">@filter.Description</small>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Nhóm bộ lọc điều chỉnh màu sắc và độ sáng -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#colorFilters">
+                                    <i class="bi bi-palette2 me-2"></i> Màu sắc & Độ sáng
+                                </button>
+                            </h2>
+                            <div id="colorFilters" class="accordion-collapse collapse">
+                                <div class="accordion-body p-0">
+                                    <div class="list-group list-group-flush">
+                                        @foreach (var filter in filters.Where(f => 
+                                            f.Name == "Brightness" || 
+                                            f.Name == "Contrast" || 
+                                            f.Name == "Saturation" || 
+                                            f.Name == "Hue" || 
+                                            f.Name == "Gamma"))
+                                        {
+                                            <div class="list-group-item">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    @if (filter.Name == "Brightness")
+                                                    {
+                                                        <i class="bi bi-brightness-high me-2"></i>
+                                                    }
+                                                    else if (filter.Name == "Contrast")
+                                                    {
+                                                        <i class="bi bi-circle-square me-2"></i>
+                                                    }
+                                                    else if (filter.Name == "Saturation")
+                                                    {
+                                                        <i class="bi bi-droplet-half me-2"></i>
+                                                    }
+                                                    else if (filter.Name == "Hue")
+                                                    {
+                                                        <i class="bi bi-palette me-2"></i>
+                                                    }
+                                                    else if (filter.Name == "Gamma")
+                                                    {
+                                                        <i class="bi bi-lightning me-2"></i>
+                                                    }
+                                                    @filter.Name
+                                                </div>
+                                                <form method="post" action="/api/image/apply">
+                                                    <input type="hidden" name="imagePath" value="@ViewBag.CurrentImagePath" />
+                                                    <input type="hidden" name="filterName" value="@filter.Name" />
+                                                    
+                                                    <div class="mb-2 mt-2">
+                                                        <div class="d-flex justify-content-between">
+                                                            @if (filter.Name == "Hue")
+                                                            {
+                                                                <small>0°</small>
+                                                                <small>180°</small>
+                                                                <small>360°</small>
+                                                            }
+                                                            else if (filter.Name == "Gamma")
+                                                            {
+                                                                <small>0.1</small>
+                                                                <small>2.5</small>
+                                                                <small>5</small>
+                                                            }
+                                                            else
+                                                            {
+                                                                <small>-1</small>
+                                                                <small>0</small>
+                                                                <small>+1</small>
+                                                            }
+                                                        </div>
+                                                        @if (filter.Name == "Hue")
+                                                        {
+                                                            <div class="d-flex align-items-center">
+                                                                <input type="range" class="form-range me-2" name="value" min="0" max="360" step="10" value="0">
+                                                                <span class="range-value badge bg-secondary">0</span>
+                                                            </div>
+                                                        }
+                                                        else if (filter.Name == "Gamma")
+                                                        {
+                                                            <div class="d-flex align-items-center">
+                                                                <input type="range" class="form-range me-2" name="value" min="0.1" max="5" step="0.1" value="1">
+                                                                <span class="range-value badge bg-secondary">1</span>
+                                                            </div>
+                                                        }
+                                                        else
+                                                        {
+                                                            <div class="d-flex align-items-center">
+                                                                <input type="range" class="form-range me-2" name="value" min="-1" max="1" step="0.1" value="0">
+                                                                <span class="range-value badge bg-secondary">0</span>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                    <button type="submit" class="btn btn-sm btn-outline-primary w-100">Áp dụng</button>
+                                                </form>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Nhóm bộ lọc làm mờ và sắc nét -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#blurFilters">
+                                    <i class="bi bi-water me-2"></i> Làm mờ & Sắc nét
+                                </button>
+                            </h2>
+                            <div id="blurFilters" class="accordion-collapse collapse">
+                                <div class="accordion-body p-0">
+                                    <div class="list-group list-group-flush">
+                                        @foreach (var filter in filters.Where(f => 
+                                            f.Name == "Blur" || 
+                                            f.Name == "GaussianBlur" || 
+                                            f.Name == "BoxBlur" || 
+                                            f.Name == "Sharpen"))
+                                        {
+                                            <div class="list-group-item">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    @if (filter.Name == "Blur")
+                                                    {
+                                                        <i class="bi bi-water me-2"></i>
+                                                    }
+                                                    else if (filter.Name == "GaussianBlur")
+                                                    {
+                                                        <i class="bi bi-cloud-haze me-2"></i>
+                                                    }
+                                                    else if (filter.Name == "BoxBlur")
+                                                    {
+                                                        <i class="bi bi-grid-3x3 me-2"></i>
+                                                    }
+                                                    else if (filter.Name == "Sharpen")
+                                                    {
+                                                        <i class="bi bi-asterisk me-2"></i>
+                                                    }
+                                                    @filter.Name
+                                                </div>
+                                                <small class="text-muted mb-2 d-block">@filter.Description</small>
+                                                <form method="post" action="/api/image/apply">
+                                                    <input type="hidden" name="imagePath" value="@ViewBag.CurrentImagePath" />
+                                                    <input type="hidden" name="filterName" value="@filter.Name" />
+                                                    
+                                                    @if (filter.Name == "Blur" || filter.Name == "Sharpen")
+                                                    {
+                                                        <div class="mb-2">
+                                                            <label class="form-label small">Cường độ</label>
+                                                            <div class="d-flex align-items-center">
+                                                                <input type="range" class="form-range me-2" name="amount" min="1" max="20" step="1" value="5">
+                                                                <span class="range-value badge bg-secondary">5</span>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                    else if (filter.Name == "GaussianBlur")
+                                                    {
+                                                        <div class="mb-2">
+                                                            <label class="form-label small">Sigma</label>
+                                                            <div class="d-flex align-items-center">
+                                                                <input type="range" class="form-range me-2" name="sigma" min="0.5" max="20" step="0.5" value="3">
+                                                                <span class="range-value badge bg-secondary">3</span>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                    else if (filter.Name == "BoxBlur")
+                                                    {
+                                                        <div class="mb-2">
+                                                            <label class="form-label small">Bán kính</label>
+                                                            <div class="d-flex align-items-center">
+                                                                <input type="range" class="form-range me-2" name="radius" min="1" max="20" step="1" value="5">
+                                                                <span class="range-value badge bg-secondary">5</span>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                    
+                                                    <button type="submit" class="btn btn-sm btn-outline-primary w-100">Áp dụng</button>
+                                                </form>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Nhóm bộ lọc hiệu ứng đặc biệt -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#effectFilters">
+                                    <i class="bi bi-magic me-2"></i> Hiệu ứng đặc biệt
+                                </button>
+                            </h2>
+                            <div id="effectFilters" class="accordion-collapse collapse">
+                                <div class="accordion-body p-0">
+                                    <div class="list-group list-group-flush">
+                                        @foreach (var filter in filters.Where(f => 
+                                            f.Name == "Pixelate" || 
+                                            f.Name == "OilPaint" || 
+                                            f.Name == "Lomograph" || 
+                                            f.Name == "Polaroid" || 
+                                            f.Name == "Kodachrome" || 
+                                            f.Name == "Glow" || 
+                                            f.Name == "Vignette"))
+                                        {
+                                            <div class="list-group-item">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    @if (filter.Name == "Pixelate")
+                                                    {
+                                                        <i class="bi bi-grid me-2"></i>
+                                                    }
+                                                    else if (filter.Name == "OilPaint")
+                                                    {
+                                                        <i class="bi bi-brush me-2"></i>
+                                                    }
+                                                    else if (filter.Name == "Lomograph")
+                                                    {
+                                                        <i class="bi bi-camera me-2"></i>
+                                                    }
+                                                    else if (filter.Name == "Polaroid")
+                                                    {
+                                                        <i class="bi bi-card-image me-2"></i>
+                                                    }
+                                                    else if (filter.Name == "Kodachrome")
+                                                    {
+                                                        <i class="bi bi-film me-2"></i>
+                                                    }
+                                                    else if (filter.Name == "Glow")
+                                                    {
+                                                        <i class="bi bi-stars me-2"></i>
+                                                    }
+                                                    else if (filter.Name == "Vignette")
+                                                    {
+                                                        <i class="bi bi-circle me-2"></i>
+                                                    }
+                                                    @filter.Name
+                                                </div>
+                                                <small class="text-muted mb-2 d-block">@filter.Description</small>
+                                                <form method="post" action="/api/image/apply">
+                                                    <input type="hidden" name="imagePath" value="@ViewBag.CurrentImagePath" />
+                                                    <input type="hidden" name="filterName" value="@filter.Name" />
+                                                    
+                                                    @if (filter.Name == "Pixelate")
+                                                    {
+                                                        <div class="mb-2">
+                                                            <label class="form-label small">Kích thước pixel</label>
+                                                            <input type="range" class="form-range" name="size" min="2" max="50" step="1" value="8">
+                                                        </div>
+                                                    }
+                                                    else if (filter.Name == "OilPaint")
+                                                    {
+                                                        <div class="mb-2">
+                                                            <label class="form-label small">Kích thước nét cọ</label>
+                                                            <input type="range" class="form-range" name="brushSize" min="1" max="20" step="1" value="5">
+                                                        </div>
+                                                    }
+                                                    else if (filter.Name == "Glow")
+                                                    {
+                                                        <div class="mb-2">
+                                                            <label class="form-label small">Cường độ</label>
+                                                            <input type="range" class="form-range" name="amount" min="0.1" max="1" step="0.1" value="0.5">
+                                                        </div>
+                                                    }
+                                                    else if (filter.Name == "Vignette")
+                                                    {
+                                                        <div class="mb-2">
+                                                            <label class="form-label small">Bán kính</label>
+                                                            <input type="range" class="form-range" name="radius" min="0.1" max="1.5" step="0.1" value="1.0">
+                                                        </div>
+                                                    }
+                                                    
+                                                    <button type="submit" class="btn btn-sm btn-outline-primary w-100">Áp dụng</button>
+                                                </form>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Nhóm bộ lọc biến đổi -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#transformFilters">
+                                    <i class="bi bi-arrows-move me-2"></i> Biến đổi
+                                </button>
+                            </h2>
+                            <div id="transformFilters" class="accordion-collapse collapse">
+                                <div class="accordion-body p-0">
+                                    <div class="list-group list-group-flush">
+                                        @foreach (var filter in filters.Where(f => f.Name == "Flip Horizontal" || f.Name == "Flip Vertical"))
+                                        {
+                                            <div class="list-group-item">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        @if (filter.Name == "Flip Horizontal")
+                                                        {
+                                                            <i class="bi bi-arrow-left-right me-2"></i>
+                                                        }
+                                                        else if (filter.Name == "Flip Vertical")
+                                                        {
+                                                            <i class="bi bi-arrow-down-up me-2"></i>
+                                                        }
+                                                        @filter.Name
+                                                    </div>
+                                                    <form method="post" action="/api/image/apply" class="d-inline">
+                                                        <input type="hidden" name="imagePath" value="@ViewBag.CurrentImagePath" />
+                                                        <input type="hidden" name="filterName" value="@filter.Name" />
+                                                        <button type="submit" class="btn btn-sm btn-outline-primary">Áp dụng</button>
+                                                    </form>
+                                                </div>
+                                                <small class="text-muted">@filter.Description</small>
+                                            </div>
+                                        }
+
+                                        <!-- Rotate filter -->
+                                        @foreach (var filter in filters.Where(f => f.Name == "Rotate"))
+                                        {
+                                            <div class="list-group-item">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <i class="bi bi-arrow-clockwise me-2"></i>
+                                                    @filter.Name
+                                                </div>
+                                                <form method="post" action="/api/image/apply">
+                                                    <input type="hidden" name="imagePath" value="@ViewBag.CurrentImagePath" />
+                                                    <input type="hidden" name="filterName" value="@filter.Name" />
+                                                    
+                                                    <div class="btn-group w-100 mb-2">
+                                                        <button type="submit" class="btn btn-sm btn-outline-primary" name="angle" value="-90">
+                                                            <i class="bi bi-arrow-counterclockwise"></i> -90°
+                                                        </button>
+                                                        <button type="submit" class="btn btn-sm btn-outline-primary" name="angle" value="90">
+                                                            <i class="bi bi-arrow-clockwise"></i> 90°
+                                                        </button>
+                                                        <button type="submit" class="btn btn-sm btn-outline-primary" name="angle" value="180">
+                                                            <i class="bi bi-arrow-repeat"></i> 180°
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Nhóm bộ lọc kích thước -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sizeFilters">
+                                    <i class="bi bi-aspect-ratio me-2"></i> Kích thước
+                                </button>
+                            </h2>
+                            <div id="sizeFilters" class="accordion-collapse collapse">
+                                <div class="accordion-body p-0">
+                                    <div class="list-group list-group-flush">
+                                        <!-- Resize filter -->
+                                        @foreach (var filter in filters.Where(f => f.Name == "Resize"))
+                                        {
+                                            <div class="list-group-item">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <i class="bi bi-arrows-angle-expand me-2"></i>
+                                                    @filter.Name
+                                                </div>
+                                                <form method="post" action="/api/image/apply">
+                                                    <input type="hidden" name="imagePath" value="@ViewBag.CurrentImagePath" />
+                                                    <input type="hidden" name="filterName" value="@filter.Name" />
+                                                    
+                                                    <div class="row g-2 mb-2">
+                                                        <div class="col-6">
+                                                            <label class="form-label small">Chiều rộng</label>
+                                                            <div class="input-group input-group-sm">
+                                                                <input type="number" class="form-control" name="width" min="1" max="5000" value="@ViewBag.ImageWidth">
+                                                                <span class="input-group-text">px</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <label class="form-label small">Chiều cao</label>
+                                                            <div class="input-group input-group-sm">
+                                                                <input type="number" class="form-control" name="height" min="1" max="5000" value="@ViewBag.ImageHeight">
+                                                                <span class="input-group-text">px</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <button type="submit" class="btn btn-sm btn-outline-primary w-100">Áp dụng</button>
+                                                </form>
+                                            </div>
+                                        }
+
+                                        <!-- Crop filter -->
+                                        @foreach (var filter in filters.Where(f => f.Name == "Crop"))
+                                        {
+                                            <div class="list-group-item">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <i class="bi bi-crop me-2"></i>
+                                                    @filter.Name
+                                                </div>
+                                                <form method="post" action="/api/image/apply">
+                                                    <input type="hidden" name="imagePath" value="@ViewBag.CurrentImagePath" />
+                                                    <input type="hidden" name="filterName" value="@filter.Name" />
+                                                    
+                                                    <div class="row g-2 mb-2">
+                                                        <div class="col-6">
+                                                            <label class="form-label small">X</label>
+                                                            <div class="input-group input-group-sm">
+                                                                <input type="number" class="form-control" name="x" min="0" value="0">
+                                                                <span class="input-group-text">px</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <label class="form-label small">Y</label>
+                                                            <div class="input-group input-group-sm">
+                                                                <input type="number" class="form-control" name="y" min="0" value="0">
+                                                                <span class="input-group-text">px</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row g-2 mb-2">
+                                                        <div class="col-6">
+                                                            <label class="form-label small">Chiều rộng</label>
+                                                            <div class="input-group input-group-sm">
+                                                                <input type="number" class="form-control" name="width" min="1" value="@ViewBag.ImageWidth">
+                                                                <span class="input-group-text">px</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <label class="form-label small">Chiều cao</label>
+                                                            <div class="input-group input-group-sm">
+                                                                <input type="number" class="form-control" name="height" min="1" value="@ViewBag.ImageHeight">
+                                                                <span class="input-group-text">px</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <button type="submit" class="btn btn-sm btn-outline-primary w-100">Áp dụng</button>
+                                                </form>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="card shadow sticky-top" style="top: 20px; z-index: 100;">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-image"></i> Xem trước</h5>
+                    <div>
+                        @if (!string.IsNullOrEmpty(ViewBag.CurrentImagePath))
+                        {
+                            <a href="@ViewBag.CurrentImagePath" download class="btn btn-success btn-sm">
+                                <i class="bi bi-download"></i> Tải xuống
+                            </a>
+                            <form method="post" action="/api/image/reset" class="d-inline">
+                                <input type="hidden" name="imagePath" value="@ViewBag.CurrentImagePath" />
+                                <button type="submit" class="btn btn-secondary btn-sm">
+                                    <i class="bi bi-arrow-repeat"></i> Đặt lại
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+                <div class="card-body text-center">
+                    <div id="imagePreview">
+                        @if (string.IsNullOrEmpty(ViewBag.CurrentImagePath))
+                        {
+                            <div class="placeholder-text p-5">
+                                <i class="bi bi-image" style="font-size: 4rem;"></i>
+                                <p class="mt-3">Tải lên ảnh để bắt đầu chỉnh sửa</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <img src="@ViewBag.CurrentImagePath" style="max-width: 100%; max-height: 60vh;" class="img-fluid" />
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Command Input Block -->
+<div class="position-fixed bottom-0 end-0 p-4" style="z-index: 1000;">
+    <!-- Floating AI Icon Button -->
+    <button id="aiIconButton" class="btn btn-primary rounded-circle shadow-lg" 
+            style="width: 60px; height: 60px; background: linear-gradient(45deg, #81bef1, #1976D2); border: none;">
+        <i class="bi bi-magic" style="font-size: 24px;"></i>
+    </button>
+
+    <!-- AI Command Input Block (Hidden by default) -->
+    <div id="aiCommandBlock" class="card shadow-lg border-0 mt-3" 
+         style="width: 400px; background: hsla(208, 91%, 87%, 0.95); backdrop-filter: blur(10px); display: none;">
+        <div class="card-header bg-gradient text-white" style="background: linear-gradient(45deg, #2196F3, #1976D2);">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-magic me-2"></i>
+                    <h5 class="mb-0">AI Image Editor (Gemini 2.0)</h5>
+                </div>
+                <button type="button" class="btn-close btn-close-white" id="closeAiBlock"></button>
+            </div>
+        </div>
+        <div class="card-body">
+            <form id="aiCommandForm" method="post" action="/api/image/ai-edit">
+                <div class="mb-3">
+                    <label for="aiCommand" class="form-label fw-bold text-white">Enter your edit command:</label>
+                    <textarea class="form-control" id="aiCommand" name="command" rows="3" 
+                              placeholder="Example: Make the image warmer, add a sunset in the background, remove the clouds, etc."
+                              style="resize: none; border: 2px solid #e0e0e0; border-radius: 8px;"></textarea>
+                    <small class="form-text text-white">Powered by Google Gemini 2.0 Flash. Try commands like "Add a mountain in the background", "Make it look like a painting", "Change to night time", etc.</small>
+                </div>
+                <input type="hidden" name="imagePath" value="@ViewBag.CurrentImagePath" />
+                <button type="submit" class="btn btn-primary w-100" id="aiEditButton" disabled
+                        style="background: linear-gradient(45deg, #2196F3, #1976D2); border: none; padding: 10px; border-radius: 8px;">
+                    <i class="bi bi-magic"></i> Apply AI Edit
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/app.js"></script>
+    <script>
+        // AI Block Toggle
+        const aiIconButton = document.getElementById('aiIconButton');
+        const aiCommandBlock = document.getElementById('aiCommandBlock');
+        const closeAiBlock = document.getElementById('closeAiBlock');
+
+        aiIconButton.addEventListener('click', () => {
+            aiCommandBlock.style.display = aiCommandBlock.style.display === 'none' ? 'block' : 'none';
+        });
+
+        closeAiBlock.addEventListener('click', () => {
+            aiCommandBlock.style.display = 'none';
+        });
+
+        // Enable/disable AI edit button based on image presence and command input
+        const aiCommandForm = document.getElementById('aiCommandForm');
+        const aiCommand = document.getElementById('aiCommand');
+        const aiEditButton = document.getElementById('aiEditButton');
+        const currentImagePath = '@ViewBag.CurrentImagePath';
+
+        function updateAIButtonState() {
+            aiEditButton.disabled = !currentImagePath || !aiCommand.value.trim();
+        }
+
+        aiCommand.addEventListener('input', updateAIButtonState);
+        updateAIButtonState();
+
+        // Handle form submission
+        aiCommandForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            try {
+                aiEditButton.disabled = true;
+                aiEditButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+                
+                const formData = new FormData(this);
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to process image');
+                }
+
+                // Reload the page to show the edited image
+                window.location.reload();
+            } catch (error) {
+                alert('Error: ' + error.message);
+                aiEditButton.disabled = false;
+                aiEditButton.innerHTML = '<i class="bi bi-magic"></i> Apply AI Edit';
+            }
+        });
+    </script>
+} 
