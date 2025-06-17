@@ -3,6 +3,8 @@ services:
     name: miniphotoshop
     runtime: docker
     plan: free
+    buildCommand: docker build -t miniphotoshop .
+    startCommand: docker run -p 8080:8080 -e IMAGE_API_KEY=$IMAGE_API_KEY -e IMGBB_API_KEY=$IMGBB_API_KEY -e ASPNETCORE_ENVIRONMENT=Production miniphotoshop
     envVars:
       - key: IMAGE_API_KEY
         sync: false

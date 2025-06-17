@@ -11,4 +11,10 @@ out/
 *.jfm
 node_modules/
 wwwroot/uploads/*
-!wwwroot/uploads/.gitkeep 
+!wwwroot/uploads/.gitkeep
+.git/
+.github/
+README.md
+*.md
+.gitignore
+.dockerignore 
