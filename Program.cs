@@ -22,7 +22,6 @@ namespace MiniPhotoshop
             // Thêm cấu hình để đọc biến môi trường API key
             builder.Configuration.AddEnvironmentVariables();
             Environment.SetEnvironmentVariable("IMAGE_API_KEY", builder.Configuration["IMAGE_API_KEY"]);
-            Environment.SetEnvironmentVariable("IMGBB_API_KEY", builder.Configuration["IMGBB_API_KEY"]);
 
             // Thêm services vào container.
             builder.Services.AddControllersWithViews()
@@ -99,13 +98,10 @@ namespace MiniPhotoshop
             else
             {
                 app.UseExceptionHandler("/Home/Error");
-                // Disable HTTPS redirection for Render.com
-                // app.UseHsts();
+                app.UseHsts();
             }
 
-            // Disable HTTPS redirection for Render.com
-            // app.UseHttpsRedirection();
-            
+            app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseImageSharp();
             app.UseRouting();

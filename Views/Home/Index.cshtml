@@ -12,6 +12,14 @@
         </div>
     }
 
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
     <div class="row">
         <div class="col-md-3">
             <div class="card shadow-sm">
@@ -591,30 +599,35 @@
     </button>
 
     <!-- AI Command Input Block (Hidden by default) -->
-    <div id="aiCommandBlock" class="card shadow-lg border-0 mt-3" 
-         style="width: 400px; background: hsla(208, 91%, 87%, 0.95); backdrop-filter: blur(10px); display: none;">
+    <div id="aiCommandBlock" class="card position-fixed bottom-0 end-0 mb-4 me-4 shadow-lg" style="width: 350px; display: none; background-color: rgba(33, 37, 41, 0.9); border-radius: 12px; z-index: 1050;">
         <div class="card-header bg-gradient text-white" style="background: linear-gradient(45deg, #2196F3, #1976D2);">
             <div class="d-flex align-items-center justify-content-between">
                 <div class="d-flex align-items-center">
                     <i class="bi bi-magic me-2"></i>
-                    <h5 class="mb-0">AI Image Editor (Gemini 2.0)</h5>
+                    <h5 class="mb-0">AI Image Generator</h5>
                 </div>
                 <button type="button" class="btn-close btn-close-white" id="closeAiBlock"></button>
             </div>
         </div>
         <div class="card-body">
-            <form id="aiCommandForm" method="post" action="/api/image/ai-edit">
+            <form id="aiCommandForm" method="post" action="/api/image/ai-generate">
                 <div class="mb-3">
-                    <label for="aiCommand" class="form-label fw-bold text-white">Enter your edit command:</label>
-                    <textarea class="form-control" id="aiCommand" name="command" rows="3" 
-                              placeholder="Example: Make the image warmer, add a sunset in the background, remove the clouds, etc."
+                    <label for="aiCommand" class="form-label fw-bold text-white">Nhập mô tả để tạo ảnh:</label>
+                    <textarea class="form-control" id="aiCommand" name="prompt" rows="3" 
+                              placeholder="Ví dụ: Một bức tranh phong cảnh đẹp với núi, hồ và mặt trời mọc"
                               style="resize: none; border: 2px solid #e0e0e0; border-radius: 8px;"></textarea>
-                    <small class="form-text text-white">Powered by Google Gemini 2.0 Flash. Try commands like "Add a mountain in the background", "Make it look like a painting", "Change to night time", etc.</small>
+                    <small class="form-text text-white">Powered by 4oimageapi.io. Hãy thử với các mô tả chi tiết như "Một bức tranh phong cảnh biển với hoàng hôn", "Một con mèo đang chơi đàn piano", v.v.</small>
                 </div>
-                <input type="hidden" name="imagePath" value="@ViewBag.CurrentImagePath" />
-                <button type="submit" class="btn btn-primary w-100" id="aiEditButton" disabled
+                <div id="aiProcessingStatus" class="alert alert-info mb-3" style="display: none;">
+                    <div class="d-flex align-items-center">
+                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                        <span>Đang tạo ảnh bằng AI, vui lòng đợi (có thể mất 30-60 giây)...</span>
+                    </div>
+                </div>
+                <div id="aiErrorStatus" class="alert alert-danger mb-3" style="display: none;"></div>
+                <button type="submit" class="btn btn-primary w-100" id="aiEditButton"
                         style="background: linear-gradient(45deg, #2196F3, #1976D2); border: none; padding: 10px; border-radius: 8px;">
-                    <i class="bi bi-magic"></i> Apply AI Edit
+                    <i class="bi bi-magic"></i> Tạo ảnh bằng AI
                 </button>
             </form>
         </div>
@@ -628,6 +641,8 @@
         const aiIconButton = document.getElementById('aiIconButton');
         const aiCommandBlock = document.getElementById('aiCommandBlock');
         const closeAiBlock = document.getElementById('closeAiBlock');
+        const aiProcessingStatus = document.getElementById('aiProcessingStatus');
+        const aiErrorStatus = document.getElementById('aiErrorStatus');
 
         aiIconButton.addEventListener('click', () => {
             aiCommandBlock.style.display = aiCommandBlock.style.display === 'none' ? 'block' : 'none';
@@ -637,43 +652,85 @@
             aiCommandBlock.style.display = 'none';
         });
 
-        // Enable/disable AI edit button based on image presence and command input
+        // Enable/disable AI button based on prompt input
         const aiCommandForm = document.getElementById('aiCommandForm');
         const aiCommand = document.getElementById('aiCommand');
         const aiEditButton = document.getElementById('aiEditButton');
-        const currentImagePath = '@ViewBag.CurrentImagePath';
 
         function updateAIButtonState() {
-            aiEditButton.disabled = !currentImagePath || !aiCommand.value.trim();
+            const hasPrompt = aiCommand.value && aiCommand.value.trim() !== '';
+            aiEditButton.disabled = !hasPrompt;
         }
 
         aiCommand.addEventListener('input', updateAIButtonState);
+        
+        // Cập nhật trạng thái ban đầu
         updateAIButtonState();
 
+        // Check for error messages in TempData
+        const errorMessage = '@TempData["ErrorMessage"]';
+        if (errorMessage && errorMessage !== '') {
+            aiErrorStatus.textContent = errorMessage;
+            aiErrorStatus.style.display = 'block';
+        }
+
         // Handle form submission
-        aiCommandForm.addEventListener('submit', async function(e) {
+        aiCommandForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
             try {
                 aiEditButton.disabled = true;
-                aiEditButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+                aiEditButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...';
+                aiProcessingStatus.style.display = 'block';
+                aiErrorStatus.style.display = 'none';
                 
                 const formData = new FormData(this);
-                const response = await fetch(this.action, {
+                const prompt = formData.get('prompt');
+                
+                if (!prompt) {
+                    throw new Error('Vui lòng nhập mô tả để tạo ảnh.');
+                }
+                
+                console.log('Sending request with prompt:', prompt);
+                
+                fetch(this.action, {
                     method: 'POST',
                     body: formData
+                })
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.json().then(data => {
+                        if (!response.ok) {
+                            throw new Error(data.error || `Lỗi từ máy chủ: ${response.status}`);
+                        }
+                        return data;
+                    }).catch(err => {
+                        // Xử lý trường hợp response không phải JSON
+                        if (!response.ok) {
+                            throw new Error(`Lỗi từ máy chủ: ${response.status}`);
+                        }
+                        return response.text();
+                    });
+                })
+                .then(data => {
+                    console.log('Success:', data);
+                    window.location.reload();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    aiProcessingStatus.style.display = 'none';
+                    aiErrorStatus.textContent = error.message || 'Đã xảy ra lỗi khi xử lý yêu cầu';
+                    aiErrorStatus.style.display = 'block';
+                    aiEditButton.disabled = false;
+                    aiEditButton.innerHTML = '<i class="bi bi-magic"></i> Tạo ảnh bằng AI';
                 });
-
-                if (!response.ok) {
-                    throw new Error('Failed to process image');
-                }
-
-                // Reload the page to show the edited image
-                window.location.reload();
             } catch (error) {
-                alert('Error: ' + error.message);
+                console.error('Client error:', error);
+                aiProcessingStatus.style.display = 'none';
+                aiErrorStatus.textContent = error.message || 'Đã xảy ra lỗi khi xử lý yêu cầu';
+                aiErrorStatus.style.display = 'block';
                 aiEditButton.disabled = false;
-                aiEditButton.innerHTML = '<i class="bi bi-magic"></i> Apply AI Edit';
+                aiEditButton.innerHTML = '<i class="bi bi-magic"></i> Tạo ảnh bằng AI';
             }
         });
     </script>

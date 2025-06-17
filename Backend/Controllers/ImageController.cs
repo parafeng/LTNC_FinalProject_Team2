@@ -155,11 +155,23 @@ namespace MiniPhotoshop.Backend.Controllers
             {
                 _logger.LogInformation("Đang đặt lại ảnh {0} về trạng thái gốc", imagePath);
                 
+                if (string.IsNullOrEmpty(imagePath))
+                {
+                    _logger.LogError("Đường dẫn ảnh trống");
+                    TempData["ErrorMessage"] = "Không tìm thấy ảnh để đặt lại";
+                    return RedirectToAction("Index", "Home");
+                }
+                
                 // Đặt lại ảnh về trạng thái gốc
+                _logger.LogInformation("Gọi ResetImage với đường dẫn: {0}", imagePath);
                 var originalPath = _imageProcessingService.ResetImage(imagePath);
+                _logger.LogInformation("Kết quả ResetImage: {0}", originalPath);
                 
                 // Lưu thông tin ảnh gốc vào TempData
                 TempData["CurrentImagePath"] = originalPath;
+                
+                // Thêm thông báo thành công
+                TempData["SuccessMessage"] = "Đã đặt lại ảnh về trạng thái gốc";
                 
                 // Chuyển hướng về trang chủ
                 return RedirectToAction("Index", "Home");
@@ -209,23 +221,23 @@ namespace MiniPhotoshop.Backend.Controllers
         }
         
         /// <summary>
-        /// Apply AI-based image editing based on a text command
+        /// Generate a new image using AI based on a text prompt
         /// </summary>
-        [HttpPost("ai-edit")]
-        public async Task<IActionResult> AIEdit([FromForm] string imagePath, [FromForm] string command)
+        [HttpPost("ai-generate")]
+        public async Task<IActionResult> AIGenerate([FromForm] string prompt)
         {
             try
             {
-                _logger.LogInformation("Applying AI edit with command: {0} for image {1}", command, imagePath);
+                _logger.LogInformation("Generating AI image with prompt: {0}", prompt);
                 
-                if (string.IsNullOrEmpty(imagePath))
+                if (string.IsNullOrEmpty(prompt))
                 {
-                    _logger.LogError("Image path is empty");
-                    return BadRequest(new { error = "Không tìm thấy ảnh để chỉnh sửa. Vui lòng tải lên ảnh trước." });
+                    _logger.LogError("Prompt is empty");
+                    return BadRequest(new { error = "Vui lòng nhập mô tả để tạo ảnh." });
                 }
 
-                // Apply AI edit
-                var newImagePath = await _imageProcessingService.ApplyAIEditAsync(imagePath, command);
+                // Generate image using AI
+                var newImagePath = await _imageProcessingService.GenerateImageAsync(prompt);
                 
                 // Save the new image path to TempData
                 TempData["CurrentImagePath"] = newImagePath;
@@ -235,8 +247,35 @@ namespace MiniPhotoshop.Backend.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error applying AI edit: {0}", ex.Message);
-                return BadRequest(new { error = $"Lỗi khi áp dụng chỉnh sửa AI: {ex.Message}" });
+                _logger.LogError(ex, "Error generating AI image: {0}", ex.Message);
+                return BadRequest(new { error = $"Lỗi khi tạo ảnh bằng AI: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// Apply AI-based image editing based on a text command
+        /// This method is kept for backward compatibility
+        /// </summary>
+        [HttpPost("ai-edit")]
+        public async Task<IActionResult> AIEdit([FromForm] string imagePath, [FromForm] string command)
+        {
+            try
+            {
+                _logger.LogInformation("Redirecting AI edit request to AI generate with prompt: {0}", command);
+                
+                if (string.IsNullOrEmpty(command))
+                {
+                    _logger.LogError("Command is empty");
+                    return BadRequest(new { error = "Vui lòng nhập mô tả để tạo ảnh." });
+                }
+
+                // Redirect to AI generate method
+                return await AIGenerate(command);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error redirecting AI edit: {0}", ex.Message);
+                return BadRequest(new { error = $"Lỗi khi tạo ảnh bằng AI: {ex.Message}" });
             }
         }
     }

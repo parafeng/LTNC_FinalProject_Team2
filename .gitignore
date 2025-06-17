@@ -1,32 +1,9 @@
 # .NET Core
 bin/
 obj/
-out/
-
-# Visual Studio files
 .vs/
 *.user
 *.suo
-*.userosscache
-*.dbmdl
-*.jfm
-
-# IDE files
-.vscode/
-.idea/
-
-# Node.js
-node_modules/
-
-# User uploads
-wwwroot/uploads/*
-!wwwroot/uploads/.gitkeep
-
-# Environment variables
-.env
-.env.local
-
-# Cache files
 *.cache
 *.dll
 *.exe
@@ -34,4 +11,13 @@ wwwroot/uploads/*
 *.userprefs
 *.log
 *.swp
-*.swo 
+*.swo
+
+# Uploads
+wwwroot/uploads/
+
+# Environment variables and secrets
+appsettings.Development.json
+appsettings.Production.json
+.env
+.env.local 

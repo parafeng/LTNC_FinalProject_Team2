@@ -57,6 +57,67 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Tải danh sách các bộ lọc đã áp dụng
     loadAppliedFilters();
+    
+    // Theo dõi form đặt lại ảnh
+    document.querySelectorAll('form[action="/api/image/reset"]').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            // Ngăn chặn hành vi mặc định của form
+            e.preventDefault();
+            
+            // Hiển thị trạng thái đang xử lý
+            const submitButton = form.querySelector('button[type="submit"]');
+            if (submitButton) {
+                const originalText = submitButton.innerHTML;
+                submitButton.disabled = true;
+                submitButton.innerHTML = `
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Đang xử lý...
+                `;
+                
+                // Gửi yêu cầu đặt lại ảnh bằng fetch API
+                fetch('/api/image/reset', {
+                    method: 'POST',
+                    body: new FormData(form)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Lỗi khi đặt lại ảnh');
+                    }
+                    return response.text();
+                })
+                .then(() => {
+                    // Tải lại trang sau khi đặt lại ảnh thành công
+                    window.location.reload();
+                })
+                .catch(error => {
+                    console.error('Lỗi:', error);
+                    alert('Lỗi khi đặt lại ảnh: ' + error.message);
+                    
+                    // Khôi phục nút submit
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalText;
+                });
+            } else {
+                // Nếu không tìm thấy nút submit, gửi form theo cách thông thường
+                form.submit();
+            }
+        });
+    });
+    
+    // Theo dõi các form áp dụng bộ lọc
+    document.querySelectorAll('form[action="/api/image/apply"]').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            // Không ngăn chặn form submit, để nó chuyển hướng bình thường
+            // Nhưng lưu thông tin để biết rằng cần tải lại danh sách bộ lọc sau khi tải lại trang
+            sessionStorage.setItem('reloadAppliedFilters', 'true');
+        });
+    });
+    
+    // Kiểm tra xem có cần tải lại danh sách bộ lọc không
+    if (sessionStorage.getItem('reloadAppliedFilters') === 'true') {
+        sessionStorage.removeItem('reloadAppliedFilters');
+        loadAppliedFilters();
+    }
 });
 
 // Hàm tải danh sách các bộ lọc đã áp dụng
@@ -66,6 +127,14 @@ function loadAppliedFilters() {
     
     const currentImagePath = document.querySelector('input[name="imagePath"]')?.value;
     if (!currentImagePath) return;
+    
+    // Hiển thị trạng thái đang tải
+    appliedFiltersList.innerHTML = `
+        <div class="list-group-item text-center">
+            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+            <span class="ms-2">Đang tải...</span>
+        </div>
+    `;
     
     fetch(`/api/image/applied-filters?imagePath=${encodeURIComponent(currentImagePath)}`)
         .then(response => {
@@ -78,7 +147,7 @@ function loadAppliedFilters() {
             // Xóa nội dung hiện tại
             appliedFiltersList.innerHTML = '';
             
-            if (filters.length === 0) {
+            if (!filters || filters.length === 0) {
                 appliedFiltersList.innerHTML = `
                     <div class="list-group-item text-center">
                         <span class="text-muted">Chưa có bộ lọc nào được áp dụng</span>
@@ -115,7 +184,7 @@ function loadAppliedFilters() {
             appliedFiltersList.innerHTML = `
                 <div class="list-group-item text-center text-danger">
                     <i class="bi bi-exclamation-triangle me-2"></i>
-                    Không thể tải danh sách bộ lọc
+                    Không thể tải danh sách bộ lọc: ${error.message}
                 </div>
             `;
         });

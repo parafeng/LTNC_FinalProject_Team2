@@ -1,56 +1,32 @@
-# MiniPhotoshop
+# MiniPhotoshop - Ứng dụng chỉnh sửa ảnh
 
-Ứng dụng chỉnh sửa ảnh với nhiều bộ lọc và tính năng tạo ảnh bằng AI.
+Ứng dụng MiniPhotoshop là một công cụ chỉnh sửa ảnh đơn giản với các tính năng cơ bản và tích hợp AI.
 
 ## Tính năng
 
-- Chỉnh sửa ảnh với nhiều bộ lọc khác nhau
-- Tạo ảnh mới bằng AI từ mô tả văn bản
-- Lưu và tải xuống ảnh đã chỉnh sửa
+- Tải lên và chỉnh sửa ảnh
+- Các bộ lọc cơ bản: Grayscale, Sepia, Invert
+- Điều chỉnh màu sắc và độ sáng: Brightness, Contrast, Saturation, Hue, Gamma
+- Các biến đổi hình học: Resize, Rotate, Flip, Crop
+- Các hiệu ứng đặc biệt: Blur, Sharpen, Pixelate, OilPaint
+- **AI Image Editor**: Chỉnh sửa ảnh bằng ngôn ngữ tự nhiên sử dụng 4oimageapi.io
 
 ## Cài đặt
 
-### Yêu cầu
-
-- .NET 6.0 SDK trở lên
-- Docker (tùy chọn)
-
-### Chạy ứng dụng cục bộ
-
 1. Clone repository
-2. Thiết lập biến môi trường:
-   - `IMAGE_API_KEY`: API key cho 4oimageapi.io
-   - `IMGBB_API_KEY`: API key cho imgbb.com (tùy chọn)
-3. Chạy ứng dụng:
-   ```
+2. Cài đặt .NET SDK 8.0 hoặc cao hơn
+3. Cấu hình API key cho 4oimageapi.io trong file `appsettings.json` hoặc biến môi trường
+
+```json
+{
+  "IMAGE_API_KEY": "YOUR_4OIMAGEAPI_KEY_HERE"
+}
+```
+
+4. Chạy ứng dụng
+   ```bash
    dotnet run
    ```
-
-### Chạy với Docker
-
-```
-docker build -t miniphotoshop .
-docker run -p 8080:8080 -e IMAGE_API_KEY=your_api_key miniphotoshop
-```
-
-## Deploy lên Render.com
-
-1. Đăng ký tài khoản tại [Render.com](https://render.com/)
-2. Tạo một Web Service mới từ repository GitHub
-3. Chọn "Build and deploy from a Git repository"
-4. Cấu hình:
-   - **Environment**: Docker
-   - **Build Command**: (để trống)
-   - **Start Command**: (để trống)
-5. Thêm biến môi trường:
-   - `IMAGE_API_KEY`: API key cho 4oimageapi.io
-   - `IMGBB_API_KEY`: API key cho imgbb.com (tùy chọn)
-6. Click "Create Web Service"
-
-## Lưu ý
-
-- Ứng dụng sẽ tự động "ngủ" sau 15 phút không hoạt động khi sử dụng tier miễn phí của Render.com
-- Lần đầu tiên truy cập sau thời gian không hoạt động có thể mất 30-60 giây để khởi động lại
 
 ## Sử dụng AI Image Editor
 

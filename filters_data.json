@@ -1,0 +1,15 @@
+{
+  "AppliedFilters": {
+    "/uploads/5e59194a14f1451e9932b7900f19838f_ai_generated_20250617_101824_filtered.jpg": [
+      {
+        "FilterName": "OilPaint",
+        "Parameters": {
+          "brushSize": 14
+        }
+      }
+    ]
+  },
+  "OriginalImages": {
+    "/uploads/5e59194a14f1451e9932b7900f19838f_ai_generated_20250617_101824_filtered.jpg": "/uploads/5e59194a14f1451e9932b7900f19838f_ai_generated_20250617_101824.jpg"
+  }
+}
